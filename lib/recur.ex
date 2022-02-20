@@ -33,6 +33,7 @@ defmodule Recur do
   def stream(%Recur.Event{} = event) do
     Stream.unfold(event, fn event ->
       cond do
+        event.until && Date.compare(event.date, event.until) in [:eq, :gt] -> nil
         event.count == 0 -> nil
         true -> {event, next_occurance(event)}
       end
