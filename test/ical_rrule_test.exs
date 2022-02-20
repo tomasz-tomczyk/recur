@@ -48,4 +48,19 @@ defmodule ICalRRuleTest do
     assert [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30] ==
              Enum.map(result, & &1.date.day)
   end
+
+  @doc """
+    Every 10 days, 5 occurrences
+    DTSTART;TZID=US-Eastern:19970902T090000
+    RRULE:FREQ=DAILY;INTERVAL=10;COUNT=5
+    ==> (1997 9:00 AM EDT)September 2,12,22;October 2,12
+  """
+
+  test "Every 10 days, 5 occurences" do
+    result =
+      %Event{freq: :daily, date: ~D[1997-09-02], interval: 10, count: 5}
+      |> Recur.get()
+
+    assert List.last(result).date == ~D[1997-10-12]
+  end
 end
