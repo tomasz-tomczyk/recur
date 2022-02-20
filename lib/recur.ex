@@ -49,7 +49,11 @@ defmodule Recur do
       %Recur.Event{freq: :daily, date: ~D[2022-01-02]}
   """
   def next_occurance(%Recur.Event{freq: :daily} = event) do
-    number_of_days = 1
+    number_of_days =
+      case event.interval do
+        nil -> 1
+        interval -> interval
+      end
 
     count =
       case event.count do

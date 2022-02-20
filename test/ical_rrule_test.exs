@@ -30,4 +30,22 @@ defmodule ICalRRuleTest do
 
     assert List.last(result).date == ~D[1997-12-23]
   end
+
+  @doc """
+    Every other day - forever
+    DTSTART;TZID=US-Eastern:19970902T090000
+    RRULE:FREQ=DAILY;INTERVAL=2
+    ==> (1997 9:00 AM EDT)September2,4,6,8...24,26,28,30;
+         October 2,4,6...20,22,24
+        (1997 9:00 AM EST)October 26,28,30;November 1,3,5,7...25,27,29;
+         Dec 1,3,...
+  """
+  test "Every other day - forever" do
+    result =
+      %Event{freq: :daily, date: ~D[1997-09-02], interval: 2}
+      |> Recur.get(count: 15)
+
+    assert [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30] ==
+             Enum.map(result, & &1.date.day)
+  end
 end
