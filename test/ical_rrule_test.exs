@@ -97,5 +97,23 @@ defmodule ICalRRuleTest do
 
   @tag :skip
   test "Every day in January, for 3 years, using by_month, by_day, freq yearly" do
+    result =
+      %Event{
+        freq: :yearly,
+        date: ~D[1998-01-01],
+        until: ~D[2000-01-31],
+        by_month: 1,
+        by_day: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
+      }
+      |> Recur.get()
+
+    years = Enum.map(result, & &1.date.year) |> Enum.uniq()
+    months = Enum.map(result, & &1.date.month) |> Enum.uniq()
+
+    assert years == [1998, 1999, 2000]
+    assert months == [01]
+    assert length(result) == 93
+
+    assert List.last(result).date == ~D[2000-01-31]
   end
 end
