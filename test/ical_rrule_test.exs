@@ -28,7 +28,8 @@ defmodule ICalRRuleTest do
       %Event{freq: :daily, date: ~D[1997-09-02], until: ~D[1997-12-24]}
       |> Recur.get()
 
-    assert List.last(result).date == ~D[1997-12-23]
+    # Not 100% accurate with iCal RRule until we implement the time
+    assert List.last(result).date == ~D[1997-12-24]
   end
 
   @doc """
@@ -62,5 +63,39 @@ defmodule ICalRRuleTest do
       |> Recur.get()
 
     assert List.last(result).date == ~D[1997-10-12]
+  end
+
+  @doc """
+    Every day in January, for 3 years:
+
+    DTSTART;TZID=America/New_York:19980101T090000
+
+    RRULE:FREQ=YEARLY;UNTIL=20000131T140000Z;
+    BYMONTH=1;BYDAY=SU,MO,TU,WE,TH,FR,SA
+    or
+    RRULE:FREQ=DAILY;UNTIL=20000131T140000Z;BYMONTH=1
+
+    ==> (1998 9:00 AM EDT)January 1-31
+        (1999 9:00 AM EDT)January 1-31
+        (2000 9:00 AM EDT)January 1-31
+  """
+
+  test "Every day in January, for 3 years, using by_month, freq daily" do
+    result =
+      %Event{freq: :daily, date: ~D[1998-01-01], until: ~D[2000-01-31], by_month: 1}
+      |> Recur.get()
+
+    years = Enum.map(result, & &1.date.year) |> Enum.uniq()
+    months = Enum.map(result, & &1.date.month) |> Enum.uniq()
+
+    assert years == [1998, 1999, 2000]
+    assert months == [01]
+    assert length(result) == 93
+
+    assert List.last(result).date == ~D[2000-01-31]
+  end
+
+  @tag :skip
+  test "Every day in January, for 3 years, using by_month, by_day, freq yearly" do
   end
 end

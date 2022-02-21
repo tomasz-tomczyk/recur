@@ -33,7 +33,7 @@ defmodule Recur do
   def stream(%Recur.Event{} = event) do
     Stream.unfold(event, fn event ->
       cond do
-        event.until && Date.compare(event.date, event.until) in [:eq, :gt] -> nil
+        event.until && Date.compare(event.date, event.until) == :gt -> nil
         event.count == 0 -> nil
         true -> {event, next_occurance(event)}
       end
@@ -49,11 +49,7 @@ defmodule Recur do
       %Recur.Event{freq: :daily, date: ~D[2022-01-02]}
   """
   def next_occurance(%Recur.Event{freq: :daily} = event) do
-    number_of_days =
-      case event.interval do
-        nil -> 1
-        interval -> interval
-      end
+    number_of_days = get_number_of_days(event)
 
     count =
       case event.count do
@@ -65,4 +61,22 @@ defmodule Recur do
     |> Map.put(:date, Date.add(event.date, number_of_days))
     |> Map.put(:count, count)
   end
+
+  def get_number_of_days(%Recur.Event{by_month: by_month} = event) when not is_nil(by_month) do
+    current_date_days_in_month = Date.days_in_month(event.date)
+
+    cond do
+      event.date.month == by_month && event.date.day < current_date_days_in_month ->
+        1
+
+      event.date.month < by_month ->
+        Date.diff(%{event.date | month: by_month, day: 1}, event.date)
+
+      true ->
+        Date.diff(%{event.date | year: event.date.year + 1, month: by_month, day: 1}, event.date)
+    end
+  end
+
+  def get_number_of_days(%Recur.Event{interval: nil}), do: 1
+  def get_number_of_days(%Recur.Event{interval: interval}), do: interval
 end
